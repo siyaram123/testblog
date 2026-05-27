@@ -5,8 +5,7 @@ import ejs from "ejs";
 import _ from "lodash";
 import nodemailer from "nodemailer";
 import path from "path";
-import Swal from 'sweetalert2/dist/sweetalert2.all.min.js';
-import serverless from 'serverless-http';
+import Swal from 'sweetalert2/dist/sweetalert2.all.min.js'; 
 import pg from "pg";
 import dotenv from 'dotenv';
 import multer from "multer";
@@ -36,8 +35,14 @@ const db = new pg.Client({
   database: process.env.DB_DATABASE,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
-db.connect();
+
+db.connect()
+  .then(() => console.log("Database connected"))
+  .catch(err => console.log("DB Error:", err));
 
 
 
@@ -195,7 +200,10 @@ app.get("/delete/:postName", async function (req, res) {
   const requestedTitle = _.lowerCase(req.params.postName);
 
   try {
-    await db.query("DELETE FROM posts WHERE title = $1", [requestedTitle]);
+    await db.query(
+  "DELETE FROM posts WHERE LOWER(title) = LOWER($1)",
+  [requestedTitle]
+);
     res.redirect("/");
   } catch (err) {
     console.log(err);
@@ -223,8 +231,8 @@ app.post("/contact", function (req, res) {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "shanibider@gmail.com", // 
-      pass: "frbl yjwk gqvd prwa", // "App Password"- generated app password (provided by gmail)
+      user: "siyaramkumar@gmail.com", // 
+      pass: "frbl123", // "App Password"- generated app password (provided by gmail)
     },
   });
 
@@ -236,7 +244,7 @@ function formatInquiry(inquiry) {
   // Email options
   const mailOptions = {
     from: email,
-    to: "shanibider@gmail.com",
+    to: "siyaramkumar@gmail.com",
     subject: `New Message from ${name}`,
     text: `Inquiry: ${formatInquiry(inquiry)} \n\n\n ${message} \n\n Email sent from: ${email}`,
   };
@@ -266,17 +274,4 @@ app.listen(port, () => {
   console.log(`Server started on port ${port}`);
 });
 
-
-
-
-// Export the app object. This is required for the serverless function.
-const router = express.Router();
-
-router.get('/', (req, res) => {
-  res.json({ message: 'Hello from Express.js!' });
-}
-);
-app.use('/.netlify/functions/app', router);  // path must route to lambda
-
-export const handler = serverless(app);
-
+ 
